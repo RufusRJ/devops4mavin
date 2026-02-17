@@ -1,38 +1,39 @@
 pipeline {
     agent any
 
-    tools {
-    maven 'maven'
-    jdk 'jdk-21'
-}
-
+    environment {
+        // Set JAVA_HOME and MAVEN_HOME directly
+        JAVA_HOME = 'C:\Program Files\Java\jdk-21'
+        MAVEN_HOME = 'C:\apache\maven\apache-maven-3.9.12'
+        PATH = "${env.JAVA_HOME}\\bin;${env.MAVEN_HOME}\\bin;${env.PATH}"
+    }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/RufusRJ/devops4mavin.git'
-                 
+                git 'https://github.com/dumboindian/my-webapp'
             }
         }
 
-        stage('Build with Maven') {
+        stage('Build') {
             steps {
-                bat 'mvn clean package'
+                bat 'mvn clean install'
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Test') {
             steps {
-                deploy adapters: [
-                    tomcat9(
-                        credentialsId: 'tomcat-creds',
-                        path: '',
-                        url: 'http://localhost:8081'
-                    )
-                ],
-                contextPath: 'my-webapp',
-                war: 'target/my-webapp.war'
+                bat 'mvn test'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build and tests succeeded!'
+        }
+        failure {
+            echo '❌ Build or tests failed!'
         }
     }
 }
